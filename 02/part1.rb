@@ -20,13 +20,15 @@ lines.each do | s |
     rolls << tmp
     h[:data] = rolls
     h[:valid] = h[:data].all? { |e| e[:red] <= 12 && e[:green] <= 13 && e[:blue] <= 14 }
+    h[:power] = h[:data].map { |e| e[:red]}.max * h[:data].map { |e| e[:green]}.max * h[:data].map { |e| e[:blue]}.max
   end
   data << h
 end
 
-# puts JSON.pretty_generate(data)
+puts JSON.pretty_generate(data[0])
 
-sum = data.map do | value |
-  value[:game] if value[:valid] == true
-end.compact.sum
+sum = data.map {|value| value[:game] if value[:valid] == true}.compact.sum
 puts "Sum = #{sum}"
+
+power = data.map {|value| value[:power] }.compact.sum
+puts "Power sum = #{power}"
