@@ -131,7 +131,7 @@ LINES = IO.readlines("data.txt").map(&:chomp)
 y = LINES.index {|line| line.index("^") != nil}
 x = LINES[y].index("^")
 LINES[y][x] = " "
-filtered_locations = collect_walked_locations(Marshal.load(Marshal.dump(LINES)), x, y)
+filtered_locations = collect_walked_locations(LINES, x, y)
 sum = 0
 progress = 0
 
@@ -141,10 +141,10 @@ LINES.each_index do |j|
     progress += 1
     next if LINES[j][i] == "#" || LINES[j][i] == " "
     next unless insert_move(filtered_locations, i, j) # Big performance gain by only checking locations where the guard can walk in the default configuration (51s -> 12s)
-    grid = Marshal.load(Marshal.dump(LINES))
-    grid[j][i] = "#"
-    stuck = infinite_loop?(grid, x, y)
+    LINES[j][i] = "#"
+    stuck = infinite_loop?(LINES, x, y)
     sum += 1 if stuck
+    LINES[j][i] = " " # Just changing the value inside the existing Array instead of cloning it for each check. 5.5s -> 5.1s improvement
     # puts "sum = #{sum} | Progress : #{((progress.to_f/(LINES.length*LINES[0].length))*100).round(2)}% (#{progress}/#{LINES.length*LINES[0].length})" if stuck
   end
 end
