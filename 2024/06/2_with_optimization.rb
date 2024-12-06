@@ -18,6 +18,58 @@ def insert_move(set, x, y, dir)
   end
 end
 
+# Mostly duplicate code, but for a good reason : optimization :)
+def collect_walked_locations(grid, x, y)
+  previous_moves = Set[]
+  dir = Dir::UP
+
+  until oob(grid, x, y) do
+    case dir
+    when Dir::UP
+      break if oob(grid, x, y-1)
+      destination = grid[y-1][x]
+      case destination
+      when ".", " "
+        y = y-1
+        previous_moves.add("#{x}|#{y}")
+      when "#"
+        dir = Dir::RIGHT
+      end
+    when Dir::DOWN
+      break if oob(grid, x, y+1)
+      destination = grid[y+1][x]
+      case destination
+      when ".", " "
+        y = y+1
+        previous_moves.add("#{x}|#{y}")
+      when "#"
+        dir = Dir::LEFT
+      end
+    when Dir::LEFT
+      break if oob(grid, x-1, y)
+      destination = grid[y][x-1]
+      case destination
+      when ".", " "
+        x = x-1
+        previous_moves.add("#{x}|#{y}")
+      when "#"
+        dir = Dir::UP
+      end
+    when Dir::RIGHT
+      break if oob(grid, x+1, y)
+      destination = grid[y][x+1]
+      case destination
+      when ".", " "
+        x = x+1
+        previous_moves.add("#{x}|#{y}")
+      when "#"
+        dir = Dir::DOWN
+      end
+    end
+  end
+  return previous_moves
+end
+
 # Return true if processing 'grid' while stating at 'y, x' leads to an infinite loop
 def infinite_loop?(grid, x, y)
   previous_moves = Set[]
@@ -78,6 +130,7 @@ LINES = IO.readlines("data.txt").map(&:chomp)
 y = LINES.index {|line| line.index("^") != nil}
 x = LINES[y].index("^")
 LINES[y][x] = " "
+filtered_locations = collect_walked_locations(Marshal.load(Marshal.dump(LINES)), x, y)
 sum = 0
 progress = 0
 
@@ -86,6 +139,7 @@ LINES.each_index do |j|
   LINES[y].chars.each_index do |i|
     progress += 1
     next if LINES[j][i] == "#" || LINES[j][i] == " "
+    next unless filtered_locations.include?("#{i}|#{j}") # Big performance gain by only checking locations where the guard can walk in the default configuration (51s -> 12s)
     grid = Marshal.load(Marshal.dump(LINES))
     grid[j][i] = "#"
     stuck = infinite_loop?(grid, x, y)
