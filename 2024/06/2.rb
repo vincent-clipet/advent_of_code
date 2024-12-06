@@ -128,18 +128,18 @@ filtered_locations = collect_walked_locations(LINES, x, y)
 sum = 0
 progress = 0
 
-# Bruteforcing time, dont worry about performance it will be fine (it won't)
-LINES.each_index do |j|
-  LINES[y].each_index do |i|
-    # progress += 1
-    next if LINES[j][i] == true
-    next unless insert_move(filtered_locations, i, j) # Big performance gain by only checking locations where the guard can walk in the default configuration (51s -> 12s)
-    LINES[j][i] = true
-    stuck = infinite_loop?(LINES, x, y)
-    sum += 1 if stuck
-    LINES[j][i] = false # Just changing the value inside the existing Array instead of cloning it for each check. 5.5s -> 5.1s improvement
-    # puts "sum = #{sum} | Progress : #{((progress.to_f/(LINES.length*LINES[0].length))*100).round(2)}% (#{progress}/#{LINES.length*LINES[0].length})" if stuck
-  end
+
+filtered_locations.each do |location|
+  i = location & 255
+  j = (location & 65280) >> 8
+  # progress += 1
+  next if LINES[j][i] == true
+  next unless insert_move(filtered_locations, i, j) # Big performance gain by only checking locations where the guard can walk in the default configuration (51s -> 12s)
+  LINES[j][i] = true
+  stuck = infinite_loop?(LINES, x, y)
+  sum += 1 if stuck
+  LINES[j][i] = false # Just changing the value inside the existing Array instead of cloning it for each check. 5.5s -> 5.1s improvement
+  # puts "sum = #{sum} | Progress : #{((progress.to_f/(LINES.length*LINES[0].length))*100).round(2)}% (#{progress}/#{LINES.length*LINES[0].length})" if stuck
 end
 
 puts sum - 1
