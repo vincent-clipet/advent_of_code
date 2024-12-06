@@ -30,40 +30,40 @@ def collect_walked_locations(grid, x, y)
       break if oob(grid, x, y-1)
       destination = grid[y-1][x]
       case destination
-      when ".", " "
+      when false
         y = y-1
         insert_move(previous_moves, x, y)
-      when "#"
+      when true
         dir = Dir::RIGHT
       end
     when Dir::DOWN
       break if oob(grid, x, y+1)
       destination = grid[y+1][x]
       case destination
-      when ".", " "
+      when false
         y = y+1
         insert_move(previous_moves, x, y)
-      when "#"
+      when true
         dir = Dir::LEFT
       end
     when Dir::LEFT
       break if oob(grid, x-1, y)
       destination = grid[y][x-1]
       case destination
-      when ".", " "
+      when false
         x = x-1
         insert_move(previous_moves, x, y)
-      when "#"
+      when true
         dir = Dir::UP
       end
     when Dir::RIGHT
       break if oob(grid, x+1, y)
       destination = grid[y][x+1]
       case destination
-      when ".", " "
+      when false
         x = x+1
         insert_move(previous_moves, x, y)
-      when "#"
+      when true
         dir = Dir::DOWN
       end
     end
@@ -83,40 +83,40 @@ def infinite_loop?(grid, x, y)
       return false if oob(grid, x, y-1)
       destination = grid[y-1][x]
       case destination
-      when ".", " "
+      when false
         y = y-1
         stop = insert_move(previous_moves, x, y, dir)
-      when "#"
+      when true
         dir = Dir::RIGHT
       end
     when Dir::DOWN
       return false if oob(grid, x, y+1)
       destination = grid[y+1][x]
       case destination
-      when ".", " "
+      when false
         y = y+1
         stop = insert_move(previous_moves, x, y, dir)
-      when "#"
+      when true
         dir = Dir::LEFT
       end
     when Dir::LEFT
       return false if oob(grid, x-1, y)
       destination = grid[y][x-1]
       case destination
-      when ".", " "
+      when false
         x = x-1
         stop = insert_move(previous_moves, x, y, dir)
-      when "#"
+      when true
         dir = Dir::UP
       end
     when Dir::RIGHT
       return false if oob(grid, x+1, y)
       destination = grid[y][x+1]
       case destination
-      when ".", " "
+      when false
         x = x+1
         stop = insert_move(previous_moves, x, y, dir)
-      when "#"
+      when true
         dir = Dir::DOWN
       end
     end
@@ -127,24 +127,27 @@ end
 
 
 
-LINES = IO.readlines("data.txt").map(&:chomp)
-y = LINES.index {|line| line.index("^") != nil}
-x = LINES[y].index("^")
-LINES[y][x] = " "
+FILE_LINES = IO.readlines("data.txt")
+tmp = FILE_LINES.map {|e| e.chomp.chars.map(&:ord)}
+y = tmp.index {|line| line.index('^'.ord) != nil}
+x = tmp[y].index('^'.ord)
+LINES = FILE_LINES.map {|e| e.chomp.chars.map{|e| e == "#"}} # Using a Boolean grid instead of chars. 5.2s -> 4.4s perf improvement
 filtered_locations = collect_walked_locations(LINES, x, y)
 sum = 0
 progress = 0
 
 # Bruteforcing time, dont worry about performance it will be fine (it won't)
 LINES.each_index do |j|
-  LINES[y].chars.each_index do |i|
+  LINES[y].each_index do |i|
     progress += 1
-    next if LINES[j][i] == "#" || LINES[j][i] == " "
+    next if LINES[j][i] == true
     next unless insert_move(filtered_locations, i, j) # Big performance gain by only checking locations where the guard can walk in the default configuration (51s -> 12s)
-    LINES[j][i] = "#"
+    LINES[j][i] = true
     stuck = infinite_loop?(LINES, x, y)
     sum += 1 if stuck
-    LINES[j][i] = " " # Just changing the value inside the existing Array instead of cloning it for each check. 5.5s -> 5.1s improvement
+    LINES[j][i] = false # Just changing the value inside the existing Array instead of cloning it for each check. 5.5s -> 5.1s improvement
     # puts "sum = #{sum} | Progress : #{((progress.to_f/(LINES.length*LINES[0].length))*100).round(2)}% (#{progress}/#{LINES.length*LINES[0].length})" if stuck
   end
 end
+
+puts sum - 1
