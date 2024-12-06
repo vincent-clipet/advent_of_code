@@ -29,41 +29,37 @@ def collect_walked_locations(grid, x, y)
     when Dir::UP
       break if oob(grid, x, y-1)
       destination = grid[y-1][x]
-      case destination
-      when false
+      unless destination then
         y = y-1
         insert_move(previous_moves, x, y)
-      when true
+      else
         dir = Dir::RIGHT
       end
     when Dir::DOWN
       break if oob(grid, x, y+1)
       destination = grid[y+1][x]
-      case destination
-      when false
+      unless destination then
         y = y+1
         insert_move(previous_moves, x, y)
-      when true
+      else
         dir = Dir::LEFT
       end
     when Dir::LEFT
       break if oob(grid, x-1, y)
       destination = grid[y][x-1]
-      case destination
-      when false
+      unless destination then
         x = x-1
         insert_move(previous_moves, x, y)
-      when true
+      else
         dir = Dir::UP
       end
     when Dir::RIGHT
       break if oob(grid, x+1, y)
       destination = grid[y][x+1]
-      case destination
-      when false
+      unless destination then
         x = x+1
         insert_move(previous_moves, x, y)
-      when true
+      else
         dir = Dir::DOWN
       end
     end
@@ -82,41 +78,37 @@ def infinite_loop?(grid, x, y)
     when Dir::UP
       return false if oob(grid, x, y-1)
       destination = grid[y-1][x]
-      case destination
-      when false
+      unless destination then
         y = y-1
         stop = insert_move(previous_moves, x, y, dir)
-      when true
+      else
         dir = Dir::RIGHT
       end
     when Dir::DOWN
       return false if oob(grid, x, y+1)
       destination = grid[y+1][x]
-      case destination
-      when false
+      unless destination then
         y = y+1
         stop = insert_move(previous_moves, x, y, dir)
-      when true
+      else
         dir = Dir::LEFT
       end
     when Dir::LEFT
       return false if oob(grid, x-1, y)
       destination = grid[y][x-1]
-      case destination
-      when false
+      unless destination then
         x = x-1
         stop = insert_move(previous_moves, x, y, dir)
-      when true
+      else
         dir = Dir::UP
       end
     when Dir::RIGHT
       return false if oob(grid, x+1, y)
       destination = grid[y][x+1]
-      case destination
-      when false
+      unless destination then
         x = x+1
         stop = insert_move(previous_moves, x, y, dir)
-      when true
+      else
         dir = Dir::DOWN
       end
     end
@@ -139,7 +131,7 @@ progress = 0
 # Bruteforcing time, dont worry about performance it will be fine (it won't)
 LINES.each_index do |j|
   LINES[y].each_index do |i|
-    progress += 1
+    # progress += 1
     next if LINES[j][i] == true
     next unless insert_move(filtered_locations, i, j) # Big performance gain by only checking locations where the guard can walk in the default configuration (51s -> 12s)
     LINES[j][i] = true
