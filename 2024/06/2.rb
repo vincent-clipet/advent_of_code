@@ -73,7 +73,7 @@ def infinite_loop?(grid, x, y)
   stop = false
   dir = Dir::UP
 
-  until (oob(grid, x, y) || stop) do
+  until stop do
     case dir
     when Dir::UP
       return false if oob(grid, x, y-1)
