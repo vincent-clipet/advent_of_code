@@ -9,13 +9,66 @@ def oob(array, x, y)
 end
 
 # Returns true if set already contains this x/y/dir combination. Inserts the new combination and returns false otherwise
-def insert_move(set, x, y, dir)
-  if (set.include?("#{x}|#{y}|#{dir}")) then
+def insert_move(set, x, y, dir = 0)
+  binary_value = x | y << 8 | dir << 16 # Indexing values by binary number instead of string, 12s -> 5.5s performance improvement
+  if set.include?(binary_value) then
     return true
   else
-    set.add("#{x}|#{y}|#{dir}")
+    set.add(binary_value)
     return false
   end
+end
+
+# Mostly duplicate code, but for a good reason : optimization :)
+def collect_walked_locations(grid, x, y)
+  previous_moves = Set[]
+  dir = Dir::UP
+
+  until oob(grid, x, y) do
+    case dir
+    when Dir::UP
+      break if oob(grid, x, y-1)
+      destination = grid[y-1][x]
+      case destination
+      when ".", " "
+        y = y-1
+        insert_move(previous_moves, x, y)
+      when "#"
+        dir = Dir::RIGHT
+      end
+    when Dir::DOWN
+      break if oob(grid, x, y+1)
+      destination = grid[y+1][x]
+      case destination
+      when ".", " "
+        y = y+1
+        insert_move(previous_moves, x, y)
+      when "#"
+        dir = Dir::LEFT
+      end
+    when Dir::LEFT
+      break if oob(grid, x-1, y)
+      destination = grid[y][x-1]
+      case destination
+      when ".", " "
+        x = x-1
+        insert_move(previous_moves, x, y)
+      when "#"
+        dir = Dir::UP
+      end
+    when Dir::RIGHT
+      break if oob(grid, x+1, y)
+      destination = grid[y][x+1]
+      case destination
+      when ".", " "
+        x = x+1
+        insert_move(previous_moves, x, y)
+      when "#"
+        dir = Dir::DOWN
+      end
+    end
+  end
+  return previous_moves
 end
 
 # Return true if processing 'grid' while stating at 'y, x' leads to an infinite loop
@@ -78,6 +131,7 @@ LINES = IO.readlines("data.txt").map(&:chomp)
 y = LINES.index {|line| line.index("^") != nil}
 x = LINES[y].index("^")
 LINES[y][x] = " "
+filtered_locations = collect_walked_locations(Marshal.load(Marshal.dump(LINES)), x, y)
 sum = 0
 progress = 0
 
@@ -86,10 +140,11 @@ LINES.each_index do |j|
   LINES[y].chars.each_index do |i|
     progress += 1
     next if LINES[j][i] == "#" || LINES[j][i] == " "
+    next unless insert_move(filtered_locations, i, j) # Big performance gain by only checking locations where the guard can walk in the default configuration (51s -> 12s)
     grid = Marshal.load(Marshal.dump(LINES))
     grid[j][i] = "#"
     stuck = infinite_loop?(grid, x, y)
     sum += 1 if stuck
-    puts "sum = #{sum} | Progress : #{((progress.to_f/(LINES.length*LINES[0].length))*100).round(2)}% (#{progress}/#{LINES.length*LINES[0].length})" if stuck
+    # puts "sum = #{sum} | Progress : #{((progress.to_f/(LINES.length*LINES[0].length))*100).round(2)}% (#{progress}/#{LINES.length*LINES[0].length})" if stuck
   end
 end
