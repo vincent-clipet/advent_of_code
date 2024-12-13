@@ -9,19 +9,19 @@ def oob(array, x, y)
 end
 
 # Returns true if set already contains this x/y/dir combination. Inserts the new combination and returns false otherwise
-def insert_move(set, x, y, dir)
+def insert_move(hash, x, y, dir)
   binary = x | (y << 8) | (dir << 16)
-  if set.include?(binary) then
+  if hash.has_key?(binary) then
     return true
   else
-    set.add(binary)
+    hash[binary] = true
     return false
   end
 end
 
 # Mostly duplicate code, but for a good reason : optimization :)
 def collect_walked_locations(grid, x, y)
-  previous_moves = Set[]
+  previous_moves = {}
   dir = Dir::UP
 
   until oob(grid, x, y) do
@@ -33,7 +33,7 @@ def collect_walked_locations(grid, x, y)
       when ".", " "
         y = y-1
         binary = x | (y << 8)
-        previous_moves.add(binary)
+        previous_moves[binary] = true
       when "#"
         dir = Dir::RIGHT
       end
@@ -44,7 +44,7 @@ def collect_walked_locations(grid, x, y)
       when ".", " "
         y = y+1
         binary = x | (y << 8)
-        previous_moves.add(binary)
+        previous_moves[binary] = true
       when "#"
         dir = Dir::LEFT
       end
@@ -55,7 +55,7 @@ def collect_walked_locations(grid, x, y)
       when ".", " "
         x = x-1
         binary = x | (y << 8)
-        previous_moves.add(binary)
+        previous_moves[binary] = true
       when "#"
         dir = Dir::UP
       end
@@ -66,7 +66,7 @@ def collect_walked_locations(grid, x, y)
       when ".", " "
         x = x+1
         binary = x | (y << 8)
-        previous_moves.add(binary)
+        previous_moves[binary] = true
       when "#"
         dir = Dir::DOWN
       end
@@ -77,7 +77,7 @@ end
 
 # Return true if processing 'grid' while stating at 'y, x' leads to an infinite loop
 def infinite_loop?(grid, x, y)
-  previous_moves = Set[]
+  previous_moves = {}
   stop = false
   dir = Dir::UP
 
