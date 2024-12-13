@@ -10,10 +10,11 @@ end
 
 # Returns true if set already contains this x/y/dir combination. Inserts the new combination and returns false otherwise
 def insert_move(set, x, y, dir)
-  if (set.include?("#{x}|#{y}|#{dir}")) then
+  binary = x | (y << 8) | (dir << 16)
+  if set.include?(binary) then
     return true
   else
-    set.add("#{x}|#{y}|#{dir}")
+    set.add(binary)
     return false
   end
 end
@@ -31,7 +32,8 @@ def collect_walked_locations(grid, x, y)
       case destination
       when ".", " "
         y = y-1
-        previous_moves.add("#{x}|#{y}")
+        binary = x | (y << 8)
+        previous_moves.add(binary)
       when "#"
         dir = Dir::RIGHT
       end
@@ -41,7 +43,8 @@ def collect_walked_locations(grid, x, y)
       case destination
       when ".", " "
         y = y+1
-        previous_moves.add("#{x}|#{y}")
+        binary = x | (y << 8)
+        previous_moves.add(binary)
       when "#"
         dir = Dir::LEFT
       end
@@ -51,7 +54,8 @@ def collect_walked_locations(grid, x, y)
       case destination
       when ".", " "
         x = x-1
-        previous_moves.add("#{x}|#{y}")
+        binary = x | (y << 8)
+        previous_moves.add(binary)
       when "#"
         dir = Dir::UP
       end
@@ -61,7 +65,8 @@ def collect_walked_locations(grid, x, y)
       case destination
       when ".", " "
         x = x+1
-        previous_moves.add("#{x}|#{y}")
+        binary = x | (y << 8)
+        previous_moves.add(binary)
       when "#"
         dir = Dir::DOWN
       end
@@ -140,7 +145,7 @@ LINES.each_index do |j|
   LINES[y].chars.each_index do |i|
     progress += 1
     next if LINES[j][i] == "#" || LINES[j][i] == " "
-    next unless filtered_locations.include?("#{i}|#{j}") # Big performance gain by only checking locations where the guard can walk in the default configuration (145s -> 35s)
+    next unless filtered_locations.include?(i | (j << 8)) # Big performance gain by only checking locations where the guard can walk in the default configuration (145s -> 35s)
     grid = Marshal.load(Marshal.dump(LINES))
     grid[j][i] = "#"
     stuck = infinite_loop?(grid, x, y)
